@@ -66,3 +66,36 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Responsive layout helpers */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fullOnMobile {
+  /* default inherits */
+}
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .fullOnMobile { width: 100%; }
+}
+
+/* Share page layout: main content + 280px sidebar */
+.layoutShare {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .layoutShare { grid-template-columns: 1fr; }
+}

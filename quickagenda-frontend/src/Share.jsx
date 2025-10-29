@@ -1,6 +1,30 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import CalendarView from './CalendarView'
+import QRCode from 'qrcode'
+import AppBar from '@mui/material/AppBar'
+import Toolbar from '@mui/material/Toolbar'
+import Container from '@mui/material/Container'
+import Grid from '@mui/material/Grid'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Typography from '@mui/material/Typography'
+import Stack from '@mui/material/Stack'
+import Button from '@mui/material/Button'
+import Divider from '@mui/material/Divider'
+import TextField from '@mui/material/TextField'
+import IconButton from '@mui/material/IconButton'
+import Snackbar from '@mui/material/Snackbar'
+import Alert from '@mui/material/Alert'
+import QrCode2Icon from '@mui/icons-material/QrCode2'
+import DownloadIcon from '@mui/icons-material/Download'
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
+import HomeIcon from '@mui/icons-material/Home'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import Tooltip from '@mui/material/Tooltip'
+import { useThemeMode } from './theme.jsx'
 
 function formatFullDate(d) {
   if (!(d instanceof Date) || isNaN(d)) return ''
@@ -23,7 +47,8 @@ export default function Share() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [event, setEvent] = useState(null)
-  const qrRef = useRef(null)
+  const [qrSrc, setQrSrc] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const shareUrl = useMemo(() => `${window.location.origin}/s/${code}`, [code])
 
@@ -38,28 +63,24 @@ export default function Share() {
     return () => { active = false }
   }, [code])
 
-  // Load qrcode.js from CDN once and render QR
+  // Render QR code using npm 'qrcode': prefer Data URL (<img>) for reliability
   useEffect(() => {
-    if (!qrRef.current) return
-    const ensureScript = () => new Promise((resolve, reject) => {
-      if (window.QRCode) return resolve()
-      const s = document.createElement('script')
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
-      s.async = true
-      s.onload = () => resolve()
-      s.onerror = () => reject(new Error('Failed to load QR lib'))
-      document.body.appendChild(s)
-    })
-    ensureScript().then(() => {
-      if (!qrRef.current) return
-      qrRef.current.innerHTML = ''
-      // eslint-disable-next-line no-new
-      new window.QRCode(qrRef.current, {
-        text: shareUrl,
-        width: 128,
-        height: 128,
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    const darkBG = '#111827' // slate-900
+    const lightBG = '#ffffff'
+    const opts = prefersDark
+      ? { width: 160, color: { dark: '#ffffff', light: darkBG } }
+      : { width: 160, color: { dark: '#000000', light: lightBG } }
+
+    // Generate Data URL; if it fails we'll show external fallback
+    QRCode.toDataURL(shareUrl, opts)
+      .then((url) => {
+        setQrSrc(url)
       })
-    }).catch(() => {})
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('QR data URL generation failed', err)
+      })
   }, [shareUrl])
 
   const eventDateObj = useMemo(() => event?.eventDate ? new Date(event.eventDate) : null, [event])
@@ -103,32 +124,100 @@ export default function Share() {
     return `https://www.google.com/calendar/render?${params.toString()}`
   }, [event, eventDateObj, firstSession])
 
-  if (loading) return <div style={{ padding: 16 }}>Loading…</div>
-  if (error) return <div style={{ padding: 16, color: 'crimson' }}>Error: {error}</div>
-  if (!event) return <div style={{ padding: 16 }}>Not found</div>
+  if (loading) return <Container sx={{ py: 4 }}>Loading…</Container>
+  if (error) return <Container sx={{ py: 4 }}><Typography color="error">Error: {error}</Typography></Container>
+  if (!event) return <Container sx={{ py: 4 }}>Not found</Container>
 
   return (
-    <div style={{ padding: 16, display: 'grid', gridTemplateColumns: '1fr 280px', gap: 16 }}>
-      <div>
-        <h1 style={{ margin: 0 }}>{event.name}</h1>
-        <div style={{ color: '#64748b', marginBottom: 12 }}>{formatFullDate(eventDateObj)}</div>
-        <CalendarView eventDate={eventDateObj} sessions={sessionsForView} readOnly />
-      </div>
-      <div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <a href={googleLink || '#'} target="_blank" rel="noreferrer">
-            <button disabled={!googleLink}>Add to Google Calendar</button>
-          </a>
-          <a href={`/api/events/${event.shareCode}.ics`}>
-            <button>Download .ics</button>
-          </a>
-          <div>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>Share</div>
-            <div ref={qrRef} />
-            <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{shareUrl}</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <>
+      <AppBar position="static">
+        <Toolbar>
+          <CalendarMonthIcon sx={{ mr: 1 }} />
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>Quickagenda</Typography>
+          {(() => { const { mode, toggle } = useThemeMode(); return (
+            <Tooltip title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}>
+              <IconButton aria-label="Toggle theme" color="inherit" onClick={toggle} size="large" sx={{ mr: 1 }}>
+                {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+              </IconButton>
+            </Tooltip>
+          )})()}
+          <Button color="inherit" startIcon={<HomeIcon />} href="/">Create your own</Button>
+        </Toolbar>
+      </AppBar>
+
+      <Container maxWidth="md" sx={{ py: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={7}>
+            <Stack spacing={2}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom>{event.name}</Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    {formatFullDate(eventDateObj)}
+                  </Typography>
+                  <Divider sx={{ my: 2 }} />
+                  <CalendarView eventDate={eventDateObj} sessions={sessionsForView} readOnly />
+                </CardContent>
+              </Card>
+            </Stack>
+          </Grid>
+
+          <Grid item xs={12} md={5}>
+            <Stack spacing={2}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>Actions</Typography>
+                  <Stack spacing={1}>
+                    <Button variant="contained" startIcon={<CalendarMonthIcon />} href={googleLink || '#'} target="_blank" disabled={!googleLink} fullWidth>
+                      Add to Google Calendar
+                    </Button>
+                    <Button variant="outlined" startIcon={<DownloadIcon />} href={`/api/events/${event.shareCode}.ics`} fullWidth>
+                      Download .ics
+                    </Button>
+                    <Button variant="text" startIcon={<HomeIcon />} href="/" fullWidth>
+                      Create your own event
+                    </Button>
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom><QrCode2Icon sx={{ mr: 1, verticalAlign: 'middle' }} />Share</Typography>
+                  <Stack alignItems="center" spacing={1}>
+                    <img
+                      src={qrSrc || `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(shareUrl)}`}
+                      alt="QR code"
+                      style={{ width: 160, height: 160 }}
+                    />
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ width: '100%' }}>
+                      <TextField value={shareUrl} fullWidth size="small" InputProps={{ readOnly: true }} />
+                      <IconButton color="primary" onClick={async () => {
+                        try { await navigator.clipboard.writeText(shareUrl); setCopied(true) } catch {}
+                      }}>
+                        <ContentCopyIcon />
+                      </IconButton>
+                    </Stack>
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>How it works</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Share this page with your guests. They can view the agenda and add sessions to their calendars. You can also download an .ics file for a one-time import.
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Stack>
+          </Grid>
+        </Grid>
+      </Container>
+
+      <Snackbar open={copied} autoHideDuration={2000} onClose={() => setCopied(false)} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}>
+        <Alert severity="success" sx={{ width: '100%' }}>Link copied</Alert>
+      </Snackbar>
+    </>
   )
 }

@@ -1,12 +1,15 @@
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/QuickagendaApplication.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/controller/EventController.java
+/home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/controller/FeedbackController.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/dto/EventCreateRequest.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/dto/EventDetailResponse.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/dto/SessionCreateRequest.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/dto/SessionResponse.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/dto/SessionTimeUpdateRequest.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/entity/Event.java
+/home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/entity/Feedback.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/entity/Session.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/repository/EventRepository.java
+/home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/repository/FeedbackRepository.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/repository/SessionRepository.java
 /home/lalaina/quickagenda/quickagenda-backend/src/main/java/com/example/quickagenda/service/EventService.java

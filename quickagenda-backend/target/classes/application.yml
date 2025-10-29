@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${https://iiyxexrahfdntjdmwlnn.supabase.co}
-    username: postgres
-    password: ${J*/f57wPbpG*kEn}
+    url: "jdbc:postgresql://db.iiyxexrahfdntjdmwlnn.supabase.co:5432/postgres?sslmode=require"
+    username: "postgres"
+    password: "J*/f57wPbpG*kEn"   # quoted!
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
